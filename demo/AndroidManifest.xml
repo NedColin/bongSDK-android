@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="cn.bong.android.demo"
+          android:versionCode="1"
+          android:versionName="1.0">
+
+    <!-- 因为android从4.3开始支持低功耗蓝牙（4.0），所以sdk必须从18支持起，低于该版本功能不可用-->
+    <uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19"/>
+
+    <!-- bong sdk 必须的权限声明 over-->
+    <permission android:name="cn.bong.android.permission.EVENT"
+                android:label="bong event"
+                android:protectionLevel="dangerous"/>
+    <uses-permission android:name="cn.bong.android.permission.EVENT"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <!-- bong sdk  必须的权限声明 over-->
+
+    <application
+            android:allowBackup="true"
+            android:label="@string/app_name"
+            android:icon="@drawable/ic_launcher">
+
+        <activity android:name=".DemoActivity"
+                  android:screenOrientation="portrait"
+                  android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- bong sdk  必须的一些组件声明 -->
+        <activity
+                android:name="cn.bong.android.sdk.AuthActivity"
+                android:launchMode="singleTask"
+                android:screenOrientation="portrait"/>
+
+        <receiver android:name="cn.bong.android.sdk.BongDataReceiver"
+                  android:permission="cn.bong.android.permission.EVENT">
+            <intent-filter>
+                <action android:name="cn.bong.android.action.event"/>
+            </intent-filter>
+        </receiver>
+        <service android:name="cn.bong.android.sdk.BlueService"/>
+        <!-- bong sdk 必须的一些组件声明 over-->
+    </application>
+</manifest>
