@@ -56,7 +56,36 @@ public class DemoActivity extends Activity implements View.OnClickListener {
     private Activity activity = this;
 
     private ProgressDialog sensorProgressDialog;
-    private ProgressDialog syncProgressDialog ;
+    private ProgressDialog syncProgressDialog;
+
+    /**
+     * Called when the activity is first created.
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        findViews();
+        hideView.setVisibility(View.GONE);
+        listView.setAdapter(adapter);
+        syncProgressDialog = new ProgressDialog(activity);
+        sensorProgressDialog = new ProgressDialog(activity);
+
+        // 测试用AppID（仅测试环境）
+        //client_id  1419735044202
+        //sign_key 7ae31974a95fec07ad3d047c075b11745d8ce989
+        //client_secret  558860f5ba4546ddb31eafeee11dc8f4
+
+        // 初始化sdk
+        BongManager.initialize(this, "1419735044202", "", "558860f5ba4546ddb31eafeee11dc8f4");
+        // 开启 调试模式，打印日志
+        BongManager.setDebuged(true);
+        // 设置 测试环境
+        BongManager.setEnvironment(Environment.Daily);
+
+        refreshButton();
+    }
+
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -78,36 +107,6 @@ public class DemoActivity extends Activity implements View.OnClickListener {
         }
     };
 
-    /**
-     * Called when the activity is first created.
-     */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-        findViews();
-        hideView.setVisibility(View.GONE);
-        listView.setAdapter(adapter);
-     	syncProgressDialog = new ProgressDialog(activity);
-        sensorProgressDialog = new ProgressDialog(activity);
-
-        // 测试用AppID（仅测试环境）
-        //client_id  1419735044202
-        //sign_key 7ae31974a95fec07ad3d047c075b11745d8ce989
-        //client_secret  558860f5ba4546ddb31eafeee11dc8f4
-
-        // 初始化sdk(接入api时需要AppID和AppSecret，且请注意AppSecret等信息的保密工作，防止被盗用)
-        BongManager.initialize(this, "1419735044202", "", "558860f5ba4546ddb31eafeee11dc8f4");
-        // 开启 调试模式，打印日志（默认关闭）
-        BongManager.setDebuged(true);
-        //设置 环境（默认线上）：Daily（测试）,  PreDeploy（预发，线上数据）, Product（线上）;
-        BongManager.setEnvironment(Environment.Product);
-        // 设置触摸Yes键时震动
-        BongManager.setTouchVibrate(true);
-        refreshButton();
-    }
-
-
     @Override
     public void onClick(View v) {
         // 以下操作全部在触摸之后10秒内执行
@@ -123,7 +122,7 @@ public class DemoActivity extends Activity implements View.OnClickListener {
                 BongManager.bongStartSensorOutput(sensorUiListener);
             }
         } else if (v == stopSensor) {
-            //  关闭传感器示例，请注意在合适的时候注销监听防止内存泄露
+            //  关闭传感器示例
             BongManager.bongStopSensorOutput(sensorUiListener);
         } else if (v == clear) {
             // 清除事件日志 
@@ -194,23 +193,20 @@ public class DemoActivity extends Activity implements View.OnClickListener {
             } else {
                 AlertDialog.Builder builder = DialogUtil.dialogBuilder(this, "选择同步方式", null);
                 builder.setItems(new String[]{"增量同步：最后一次同步到现在",
-                        "同步过去的24小时到现在", "同步指定时间内数据"}, new DialogInterface.OnClickListener() {
+                        "同步过去的48小时到现在", "同步指定时间内数据"}, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
                             case 0:
-                                // 增量同步：最后一次同步到现在
                                 BongManager.bongDataSyncnizedByUpdate(listener);
                                 break;
                             case 1:
-                                // 同步过去的24小时到现在
-                                BongManager.bongDataSyncnizedByHours(listener, System.currentTimeMillis(), 24);
+                                BongManager.bongDataSyncnizedByHours(listener, System.currentTimeMillis(), 48);
                                 break;
                             case 2:
-                                int tenMinutes = 10 * 60000;
+                                int minutes = 30 * 60000;
                                 long endTime = System.currentTimeMillis();
-                                long startTime = endTime - tenMinutes;
-                                // 同步指定时间内数据
+                                long startTime = endTime - minutes;
                                 BongManager.bongDataSyncnizedByTime(listener, startTime, endTime);
                                 break;
                         }
@@ -402,8 +398,8 @@ public class DemoActivity extends Activity implements View.OnClickListener {
                     case BongConst.EVENT_DATA_XYZ:
                         // 数据：接收传感器 xyz 三轴原始数据：200秒连接时间，超时自动断开。
                         DataEvent de = (DataEvent) event;
-                        tv.setText(String.format("%-6s", (position + 1) + ".") + "数据传输 X：" + String.format("%-4s",
-                                de.getX())
+                        tv.setText(String.format("%-6s", (position + 1) + ".")
+                                + "数据传输 X：" + String.format("%-4s", de.getX())
                                 + "  Y: " + String.format("%-4s", de.getY())
                                 + "  Z: " + String.format("%-4s", de.getZ())
                                 + "  " + format.format(new Date(event.getTime())));
